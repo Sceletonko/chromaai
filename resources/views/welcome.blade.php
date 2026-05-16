@@ -67,15 +67,29 @@
                 <a href="#" class="hover:text-white transition-colors">{{ __('Cenník') }}</a>
             </div>
             <div class="flex items-center space-x-4">
-                <div class="flex items-center bg-slate-800/50 rounded-lg p-1">
+                <div class="flex items-center bg-slate-800/50 rounded-lg p-1 mr-2">
                     <a href="{{ route('locale.switch', 'en') }}" class="px-3 py-1 rounded-md text-xs font-bold transition-all {{ app()->getLocale() == 'en' ? 'bg-chroma-600 text-white' : 'text-slate-400 hover:text-white' }}">EN</a>
                     <a href="{{ route('locale.switch', 'sk') }}" class="px-3 py-1 rounded-md text-xs font-bold transition-all {{ app()->getLocale() == 'sk' ? 'bg-chroma-600 text-white' : 'text-slate-400 hover:text-white' }}">SK</a>
                 </div>
-                <div>
-                    <a href="#" class="bg-white text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-200 transition-all shadow-xl shadow-white/10">
-                        {{ __('Začať zadarmo') }}
+
+                @auth
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm font-medium text-slate-300">{{ Auth::user()->name }}</span>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="text-sm text-slate-400 hover:text-white transition-colors">
+                                {{ __('Odhlásiť sa') }}
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">
+                        {{ __('Prihlásiť sa') }}
                     </a>
-                </div>
+                    <a href="{{ route('register') }}" class="bg-white text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-200 transition-all shadow-xl shadow-white/10">
+                        {{ __('Zaregistrovať sa') }}
+                    </a>
+                @endauth
             </div>
         </nav>
 

@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ChromaAi - Budúcnosť Kreativity</title>
+    <title>{{ __('ChromaAi - Budúcnosť Kreativity') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -57,22 +58,24 @@
         <!-- Navigation -->
         <nav class="max-w-7xl mx-auto px-6 py-8 flex justify-between items-center relative z-10">
             <div class="flex items-center space-x-2">
-                <div class="w-10 h-10 bg-gradient-to-tr from-chroma-600 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-chroma-500/20">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
+                <img src="{{ asset('logo.png') }}" alt="ChromaAi Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-chroma-500/20">
                 <span class="text-2xl font-bold tracking-tight text-white">ChromaAi</span>
             </div>
             <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-400">
-                <a href="#" class="hover:text-white transition-colors">Produkty</a>
-                <a href="#" class="hover:text-white transition-colors">Riešenia</a>
-                <a href="#" class="hover:text-white transition-colors">Cenník</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Produkty') }}</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Riešenia') }}</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Cenník') }}</a>
             </div>
-            <div>
-                <a href="#" class="bg-white text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-200 transition-all shadow-xl shadow-white/10">
-                    Začať zadarmo
-                </a>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center bg-slate-800/50 rounded-lg p-1">
+                    <a href="{{ route('locale.switch', 'en') }}" class="px-3 py-1 rounded-md text-xs font-bold transition-all {{ app()->getLocale() == 'en' ? 'bg-chroma-600 text-white' : 'text-slate-400 hover:text-white' }}">EN</a>
+                    <a href="{{ route('locale.switch', 'sk') }}" class="px-3 py-1 rounded-md text-xs font-bold transition-all {{ app()->getLocale() == 'sk' ? 'bg-chroma-600 text-white' : 'text-slate-400 hover:text-white' }}">SK</a>
+                </div>
+                <div>
+                    <a href="#" class="bg-white text-slate-900 px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-slate-200 transition-all shadow-xl shadow-white/10">
+                        {{ __('Začať zadarmo') }}
+                    </a>
+                </div>
             </div>
         </nav>
 
@@ -80,24 +83,24 @@
         <main class="max-w-7xl mx-auto px-6 pt-20 pb-32 text-center relative z-10">
             <div class="inline-flex items-center space-x-2 bg-slate-800/50 border border-slate-700 rounded-full px-4 py-1.5 mb-8">
                 <span class="flex h-2 w-2 rounded-full bg-chroma-500 animate-pulse"></span>
-                <span class="text-xs font-medium text-slate-300">Nová verzia 2.0 tu</span>
+                <span class="text-xs font-medium text-slate-300">{{ __('Nová verzia 2.0 tu') }}</span>
             </div>
 
             <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
-                Posuňte svoju <br/>
-                <span class="gradient-text">kreativitu s AI</span>
+                {{ __('Posuňte svoju') }} <br/>
+                <span class="gradient-text">{{ __('kreativitu s AI') }}</span>
             </h1>
 
             <p class="max-w-2xl mx-auto text-lg md:text-xl text-slate-400 mb-12 leading-relaxed">
-                ChromaAi vám prináša najmodernejšie nástroje generatívnej inteligencie pre vizuálnych umelcov, dizajnérov a vývojárov. Tvorte bez hraníc.
+                {{ __('ChromaAi vám prináša najmodernejšie nástroje generatívnej inteligencie pre vizuálnych umelcov, dizajnérov a vývojárov. Tvorte bez hraníc.') }}
             </p>
 
             <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-20">
                 <a href="#" class="bg-chroma-600 hover:bg-chroma-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-chroma-600/20">
-                    Vyskúšať ChromaAi
+                    {{ __('Vyskúšať ChromaAi') }}
                 </a>
                 <a href="#" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all border border-slate-700">
-                    Pozrieť demo
+                    {{ __('Pozrieť demo') }}
                 </a>
             </div>
 
@@ -114,7 +117,7 @@
                             <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
-                            <span class="text-sm font-medium">Náhľad rozhrania ChromaAi</span>
+                            <span class="text-sm font-medium">{{ __('Náhľad rozhrania ChromaAi') }}</span>
                         </div>
                     </div>
                 </div>
@@ -129,11 +132,11 @@
 
         <!-- Footer -->
         <footer class="max-w-7xl mx-auto px-6 py-12 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center text-slate-500 text-sm">
-            <p>&copy; 2026 ChromaAi. Všetky práva vyhradené.</p>
+            <p>&copy; 2026 ChromaAi. {{ __('Všetky práva vyhradené.') }}</p>
             <div class="flex space-x-6 mt-4 md:mt-0">
-                <a href="#" class="hover:text-white transition-colors">Ochrana údajov</a>
-                <a href="#" class="hover:text-white transition-colors">Podmienky</a>
-                <a href="#" class="hover:text-white transition-colors">Kontakt</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Ochrana údajov') }}</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Podmienky') }}</a>
+                <a href="#" class="hover:text-white transition-colors">{{ __('Kontakt') }}</a>
             </div>
         </footer>
     </div>

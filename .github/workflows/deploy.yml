@@ -16,7 +16,7 @@ jobs:
       - name: Deploy files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: s27.hostcreators.sk
+          server: hostcreators
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./

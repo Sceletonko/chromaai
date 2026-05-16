@@ -20,6 +20,10 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ssh.hostcreators.sk >> ~/.ssh/known_hosts
 
+      - name: Test SSH
+        run: |
+          ssh -v milanrabcan@rablab.net@ssh.hostcreators.sk  "echo SSH OK"
+
       - name: Deploy files
         run: |
           rsync -avz --delete ./ milanrabcan@rablab.net@ssh.hostcreators.sk:/var/www27/p69000/rablab.net/sub/chroma

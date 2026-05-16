@@ -80,18 +80,18 @@
         <main class="max-w-7xl mx-auto px-6 pt-20 pb-32 text-center relative z-10">
             <div class="inline-flex items-center space-x-2 bg-slate-800/50 border border-slate-700 rounded-full px-4 py-1.5 mb-8">
                 <span class="flex h-2 w-2 rounded-full bg-chroma-500 animate-pulse"></span>
-                <span class="text-xs font-medium text-slate-300">Nová verzia 2.0 je tu</span>
+                <span class="text-xs font-medium text-slate-300">Nová verzia 2.0 tu</span>
             </div>
-            
+
             <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-8">
                 Posuňte svoju <br/>
                 <span class="gradient-text">kreativitu s AI</span>
             </h1>
-            
+
             <p class="max-w-2xl mx-auto text-lg md:text-xl text-slate-400 mb-12 leading-relaxed">
                 ChromaAi vám prináša najmodernejšie nástroje generatívnej inteligencie pre vizuálnych umelcov, dizajnérov a vývojárov. Tvorte bez hraníc.
             </p>
-            
+
             <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-20">
                 <a href="#" class="bg-chroma-600 hover:bg-chroma-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-chroma-600/20">
                     Vyskúšať ChromaAi

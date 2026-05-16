@@ -22,5 +22,4 @@ jobs:
 
       - name: Deploy files
         run: |
-          rsync -avz --delete ./ milanrabcan@rablab.net@ssh.hostcreators.sk
-  :/var/www27/p69000/rablab.net/sub/chroma
+          rsync -avz --delete ./ milanrabcan@rablab.net@ssh.hostcreators.sk:/var/www27/p69000/rablab.net/sub/chroma

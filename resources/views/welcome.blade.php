@@ -74,7 +74,7 @@
 
                 @auth
                     <div class="flex items-center space-x-4">
-                        <span class="text-sm font-medium text-slate-300">{{ Auth::user()->name }}</span>
+                        <span class="text-sm font-medium text-slate-300">{{ auth()->user()->name }}</span>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="text-sm text-slate-400 hover:text-white transition-colors">

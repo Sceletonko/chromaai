@@ -15,7 +15,7 @@ Po spustení bude aplikácia dostupná na `http://localhost`.
 ### Migrácie databázy
 
 ```bash
-docker compose exec laravel.test php artisan migrate
+docker compose exec chromaai.test php artisan migrate
 ```
 
 ## Funkcie

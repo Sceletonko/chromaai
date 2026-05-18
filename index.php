@@ -459,17 +459,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                             <li><button class="dropdown-item" onclick="document.getElementById('localFileUpload').click()"><i class="bi bi-laptop me-2"></i> Local upload</button></li>
                         </ul>
                     </div>
-                    
-                    <div class="dropdown">
-                        <button class="control-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-cpu-fill me-2"></i> Tools
-                        </button>
-                        <ul class="dropdown-menu shadow border-0">
-                            <li><button class="dropdown-item" onclick="setPromptType('code')"><i class="bi bi-terminal me-2"></i> Code Analyzer</button></li>
-                            <li><button class="dropdown-item" onclick="setPromptType('image')"><i class="bi bi-palette me-2"></i> Design Helper</button></li>
-                        </ul>
-                    </div>
-
                     <div class="dropdown">
                         <button class="control-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-stars me-2"></i> Skills

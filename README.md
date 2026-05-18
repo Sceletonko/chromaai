@@ -12,3 +12,11 @@ Moderná AI platforma s profesionálnym dizajnom.
 - PHP
 - Bootstrap 5 (cez CDN)
 - Google Fonts (Inter)
+- Docker
+
+## Docker Setup
+Pre spustenie projektu cez Docker použite:
+```bash
+docker-compose up -d --build
+```
+Aplikácia bude dostupná na `http://localhost:8080`.

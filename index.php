@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             --primary-purple: #9b30ff;
             --dark-purple: #7a1fd1;
             --light-purple: #f3e8ff;
-            --light-bg: #ffffff;
+            --light-bg: #fdfaff;
             --text-color: #1a1a1a;
             --border-color: #e5e7eb;
         }
@@ -320,23 +320,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             left: 0;
             right: 0;
             height: 100%;
-            background: radial-gradient(circle at 50% -20%, rgba(155, 48, 255, 0.15) 0%, rgba(255,255,255,0) 70%);
+            background: radial-gradient(circle at 50% -10%, rgba(155, 48, 255, 0.35) 0%, rgba(253, 250, 255, 0) 80%);
             z-index: -1;
         }
 
         .scratch {
             position: absolute;
-            background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.15), transparent);
-            height: 2px;
-            width: 300px;
+            background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.5), transparent);
+            height: 4px;
+            width: 500px;
             z-index: -1;
-            filter: blur(1px);
+            filter: blur(5px);
+            opacity: 0.7;
         }
         
-        .scratch-1 { top: 15%; left: -50px; transform: rotate(-35deg); }
-        .scratch-2 { top: 60%; right: -100px; transform: rotate(145deg); width: 400px; }
-        .scratch-3 { bottom: 10%; left: 10%; transform: rotate(-15deg); width: 250px; }
-        .scratch-4 { top: 20%; right: 20%; transform: rotate(70deg); width: 150px; opacity: 0.5; }
+        .scratch-1 { top: 15%; left: -100px; transform: rotate(-35deg); }
+        .scratch-2 { top: 60%; right: -150px; transform: rotate(145deg); width: 500px; }
+        .scratch-3 { bottom: 10%; left: 5%; transform: rotate(-15deg); width: 350px; }
+        .scratch-4 { top: 25%; right: 15%; transform: rotate(70deg); width: 200px; opacity: 0.6; }
+        .scratch-5 { top: 40%; left: 20%; transform: rotate(10deg); width: 300px; opacity: 0.4; }
+        .scratch-6 { bottom: 30%; right: 25%; transform: rotate(-45deg); width: 250px; opacity: 0.5; }
 
         /* Upload Toast/Alert */
         .upload-status {
@@ -372,6 +375,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
     <div class="scratch scratch-2"></div>
     <div class="scratch scratch-3"></div>
     <div class="scratch scratch-4"></div>
+    <div class="scratch scratch-5"></div>
+    <div class="scratch scratch-6"></div>
 
     <header>
         <div class="header-logo">
@@ -455,8 +460,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                         </ul>
                     </div>
                     
-                    <button class="control-btn" title="Tools"><i class="bi bi-cpu-fill"></i></button>
-                    <button class="control-btn" title="Skills"><i class="bi bi-stars"></i></button>
+                    <div class="dropdown">
+                        <button class="control-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-cpu-fill me-2"></i> Tools
+                        </button>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><button class="dropdown-item" onclick="setPromptType('code')"><i class="bi bi-terminal me-2"></i> Code Analyzer</button></li>
+                            <li><button class="dropdown-item" onclick="setPromptType('image')"><i class="bi bi-palette me-2"></i> Design Helper</button></li>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="control-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-stars me-2"></i> Skills
+                        </button>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><button class="dropdown-item" onclick="setPromptType('image')"><i class="bi bi-image me-2"></i> Imagine Generator</button></li>
+                            <li><button class="dropdown-item" onclick="setPromptType('code')"><i class="bi bi-code-slash me-2"></i> Create Code</button></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="right-controls">
                     <span class="text-muted small me-2">Auto Model <i class="bi bi-chevron-down ms-1"></i></span>
@@ -469,7 +491,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
 
         <div class="action-buttons">
             <button class="btn-action" onclick="setPromptType('image')">
-                <i class="bi bi-image"></i> Create Image
+                <i class="bi bi-image"></i> Imagine Generator
             </button>
             <button class="btn-action" onclick="setPromptType('code')">
                 <i class="bi bi-code-slash"></i> Create Code
@@ -519,8 +541,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             typeBadge.style.display = 'inline-flex';
             if (type === 'image') {
                 typeBadge.innerHTML = '<i class="bi bi-image"></i> Image';
+                chatInput.placeholder = 'Describe the image you want to create...';
             } else {
                 typeBadge.innerHTML = '<i class="bi bi-code-slash"></i> Code';
+                chatInput.placeholder = 'Describe the code you want to generate...';
             }
             chatInput.focus();
         }
@@ -529,6 +553,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
         chatInput.addEventListener('keydown', function(e) {
             if (e.key === 'Backspace' && chatInput.value === '' && typeBadge.style.display === 'inline-flex') {
                 typeBadge.style.display = 'none';
+                chatInput.placeholder = 'Message ChromaAi...';
             }
         });
 

@@ -10,6 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
     
     if (move_uploaded_file($_FILES["local_file"]["tmp_name"], $target_file)) {
         $upload_success = true;
+        $uploaded_file = [
+            'name' => $file_name,
+            'path' => $target_file,
+            'type' => $_FILES["local_file"]["type"],
+            'ext' => strtolower(pathinfo($file_name, PATHINFO_EXTENSION))
+        ];
     }
 }
 ?>
@@ -51,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
         /* Top Header */
         header {
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start;
             align-items: center;
             padding: 15px 30px;
             gap: 20px;
@@ -63,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
         }
 
         .header-logo img {
-            height: 40px;
+            height: 35px;
             width: auto;
         }
 
@@ -82,11 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             background: none;
             border: none;
             padding: 0;
+            display: flex;
+            align-items: center;
         }
 
         /* Sidebar / Offcanvas */
         .offcanvas {
-            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             background-color: #fcfaff;
         }
 
@@ -118,11 +126,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             align-items: center;
             padding: 20px;
             margin-top: 60px;
+            position: relative;
         }
 
         .welcome-text {
             margin-bottom: 30px;
             text-align: center;
+            z-index: 1;
         }
 
         .welcome-text h1 {
@@ -140,17 +150,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             width: 100%;
             max-width: 800px;
             position: relative;
-            background: #fff;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
             border-radius: 24px;
             box-shadow: 0 4px 20px rgba(155, 48, 255, 0.08);
             transition: border-color 0.3s, box-shadow 0.3s;
             padding: 15px;
+            z-index: 10;
         }
 
         .chat-container:focus-within {
             border-color: var(--primary-purple);
             box-shadow: 0 4px 25px rgba(155, 48, 255, 0.15);
+        }
+
+        /* File Preview Area */
+        .file-preview-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 0 10px;
+        }
+
+        .file-preview-item {
+            position: relative;
+            background: var(--light-purple);
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(155, 48, 255, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .file-preview-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .file-preview-item i {
+            font-size: 1.5rem;
+            color: var(--primary-purple);
+        }
+
+        .file-preview-item .file-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-preview-item .remove-file {
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .file-preview-item .remove-file:hover {
+            color: #ef4444;
         }
 
         .chat-textarea {
@@ -159,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             outline: none;
             resize: none;
             font-size: 1rem;
-            min-height: 80px;
+            min-height: 60px;
             max-height: 200px;
             padding: 5px 10px;
             background: transparent;
@@ -249,10 +319,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             top: 0;
             left: 0;
             right: 0;
-            height: 400px;
-            background: radial-gradient(circle at 50% -20%, rgba(155, 48, 255, 0.1) 0%, rgba(255,255,255,0) 70%);
+            height: 100%;
+            background: radial-gradient(circle at 50% -20%, rgba(155, 48, 255, 0.15) 0%, rgba(255,255,255,0) 70%);
             z-index: -1;
         }
+
+        .scratch {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(155, 48, 255, 0.15), transparent);
+            height: 2px;
+            width: 300px;
+            z-index: -1;
+            filter: blur(1px);
+        }
+        
+        .scratch-1 { top: 15%; left: -50px; transform: rotate(-35deg); }
+        .scratch-2 { top: 60%; right: -100px; transform: rotate(145deg); width: 400px; }
+        .scratch-3 { bottom: 10%; left: 10%; transform: rotate(-15deg); width: 250px; }
+        .scratch-4 { top: 20%; right: 20%; transform: rotate(70deg); width: 150px; opacity: 0.5; }
 
         /* Upload Toast/Alert */
         .upload-status {
@@ -284,9 +368,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
 <body>
 
     <div class="bg-gradient"></div>
+    <div class="scratch scratch-1"></div>
+    <div class="scratch scratch-2"></div>
+    <div class="scratch scratch-3"></div>
+    <div class="scratch scratch-4"></div>
 
     <header>
-        <div class="dropdown profile-dropdown">
+        <div class="header-logo">
+            <img src="logo.png" alt="ChromaAi Logo">
+        </div>
+
+        <button class="menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHistory" aria-controls="offcanvasHistory">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <div class="ms-auto dropdown profile-dropdown">
             <img src="https://ui-avatars.com/api/?name=Lukas&background=9b30ff&color=fff" alt="Profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" aria-labelledby="profileDropdown">
                 <li><a class="dropdown-item rounded" href="settings.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
@@ -295,18 +391,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                 <li><a class="dropdown-item rounded text-danger" href="#"><i class="bi bi-box-arrow-right me-2"></i>Log out</a></li>
             </ul>
         </div>
-
-        <button class="menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasHistory" aria-controls="offcanvasHistory">
-            <i class="bi bi-list"></i>
-        </button>
-
-        <div class="header-logo">
-            <img src="logo.png" alt="ChromaAi Logo">
-        </div>
     </header>
 
     <!-- Sidebar History -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasHistory" aria-labelledby="offcanvasHistoryLabel">
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasHistory" aria-labelledby="offcanvasHistoryLabel">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title fw-bold" id="offcanvasHistoryLabel">Chat History</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -329,9 +417,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
 
         <div class="chat-container">
             <form id="chatForm" action="chat.php" method="GET">
+                <!-- File Preview -->
+                <div id="filePreview" class="file-preview-area <?php echo isset($uploaded_file) ? 'd-flex' : 'd-none'; ?>">
+                    <?php if (isset($uploaded_file)): ?>
+                        <div class="file-preview-item" id="uploadedFileItem">
+                            <?php if (strpos($uploaded_file['type'], 'image') !== false): ?>
+                                <img src="<?php echo $uploaded_file['path']; ?>" alt="Preview">
+                            <?php elseif ($uploaded_file['ext'] === 'php'): ?>
+                                <i class="bi bi-filetype-php"></i>
+                            <?php else: ?>
+                                <i class="bi bi-file-earmark-text"></i>
+                            <?php endif; ?>
+                            <span class="file-name"><?php echo $uploaded_file['name']; ?></span>
+                            <i class="bi bi-x-lg remove-file" onclick="removeFile()"></i>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <div class="d-flex align-items-start">
                     <span id="typeBadge" class="input-badge"></span>
-                    <textarea name="q" id="chatInput" class="chat-textarea" placeholder="Try tasks, workflows, or rescheduling tasks — type @ to add files or skills" autofocus></textarea>
+                    <textarea name="q" id="chatInput" class="chat-textarea" placeholder="Message ChromaAi..." autofocus></textarea>
                 </div>
             </form>
 
@@ -350,8 +455,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                         </ul>
                     </div>
                     
-                    <button class="control-btn"><i class="bi bi-tools"></i> Tools</button>
-                    <button class="control-btn"><i class="bi bi-lightning-charge"></i> Skill</button>
+                    <button class="control-btn" title="Tools"><i class="bi bi-cpu-fill"></i></button>
+                    <button class="control-btn" title="Skills"><i class="bi bi-stars"></i></button>
                 </div>
                 <div class="right-controls">
                     <span class="text-muted small me-2">Auto Model <i class="bi bi-chevron-down ms-1"></i></span>
@@ -426,6 +531,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                 typeBadge.style.display = 'none';
             }
         });
+
+        function removeFile() {
+            const preview = document.getElementById('filePreview');
+            preview.classList.remove('d-flex');
+            preview.classList.add('d-none');
+            preview.innerHTML = '';
+        }
     </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Jednoduchý PHP upload logik
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
     $target_dir = "uploads/";
@@ -366,6 +367,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
         .input-badge i {
             font-size: 0.9rem;
         }
+        .btn-primary-custom {
+            background-color: var(--primary-purple);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-primary-custom:hover {
+            background-color: var(--dark-purple);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -387,14 +401,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             <i class="bi bi-list"></i>
         </button>
 
-        <div class="ms-auto dropdown profile-dropdown">
-            <img src="https://ui-avatars.com/api/?name=Lukas&background=9b30ff&color=fff" alt="Profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" aria-labelledby="profileDropdown">
-                <li><a class="dropdown-item rounded" href="settings.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
-                <li><a class="dropdown-item rounded" href="https://discord.gg/8nb72489hp" target="_blank"><i class="bi bi-discord me-2"></i>Discord</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item rounded text-danger" href="#"><i class="bi bi-box-arrow-right me-2"></i>Log out</a></li>
-            </ul>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <div class="dropdown profile-dropdown">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_email']); ?>&background=9b30ff&color=fff" alt="Profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" aria-labelledby="profileDropdown">
+                        <li><div class="dropdown-header small text-muted"><?php echo htmlspecialchars($_SESSION['user_email']); ?></div></li>
+                        <li><a class="dropdown-item rounded" href="settings.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                        <li><a class="dropdown-item rounded" href="https://discord.gg/8nb72489hp" target="_blank"><i class="bi bi-discord me-2"></i>Discord</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item rounded text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i>Log out</a></li>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <a href="login.php" class="btn btn-link text-decoration-none text-dark fw-medium">Sign In</a>
+                <a href="register.php" class="btn btn-primary-custom">Sign Up</a>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -470,9 +492,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                     </div>
                 </div>
                 <div class="right-controls">
-                    <span class="text-muted small me-2">Auto Model <i class="bi bi-chevron-down ms-1"></i></span>
+                    <div class="dropdown">
+                        <button class="btn btn-link btn-sm text-muted text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="currentModel">Auto Model</span>
+                        </button>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><button class="dropdown-item" onclick="setModel('GPT-3.5 Turbo')">GPT-3.5 Turbo</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Claude 3 Haiku')">Claude 3 Haiku</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Llama 3')">Llama 3 (8B)</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Mistral 7B')">Mistral 7B</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash')">Gemini 1.5 Flash</button></li>
+                        </ul>
+                    </div>
                     <button class="send-btn" id="sendBtn">
-                        <i class="bi bi-send-fill"></i>
+                        <i class="bi bi-arrow-up"></i>
                     </button>
                 </div>
             </div>
@@ -536,6 +569,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                 chatInput.placeholder = 'Describe the code you want to generate...';
             }
             chatInput.focus();
+        }
+
+        function setModel(modelName) {
+            document.getElementById('currentModel').innerText = modelName;
         }
 
         // Hide badge if backspaced at start

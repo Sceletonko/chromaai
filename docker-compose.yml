@@ -6,4 +6,28 @@ services:
       - "8080:80"
     volumes:
       - .:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_USER=chroma_user
+      - DB_PASSWORD=chroma_password
+      - DB_NAME=chroma_db
+    depends_on:
+      - db
     restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: chromaai-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: chroma_db
+      MYSQL_USER: chroma_user
+      MYSQL_PASSWORD: chroma_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

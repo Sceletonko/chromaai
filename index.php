@@ -416,8 +416,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
 
     <main class="hero-section">
         <div class="welcome-text">
-            <h1>Hi, I'm ChromaAi</h1>
-            <p>Always here to help you get things done</p>
+            <h1>Welcome to ChromaAi</h1>
+            <p>Always ready to help you.</p>
         </div>
 
         <div class="chat-container">

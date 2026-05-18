@@ -1,7 +1,14 @@
-# ChromaAi - Resetovaný projekt
+# ChromaAi - Webová aplikácia
 
-Tento projekt bol resetovaný. Pôvodný Laravel kód bol odstránený a nahradený jednoduchým `index.php` súborom.
+Moderná AI platforma s profesionálnym dizajnom.
 
 ## Obsah
-- `index.php`: Základná vstupná stránka.
-- `.github/workflows/deploy.yml`: Automatické nasadenie na server.
+- `index.php`: Úvodná stránka s vyhľadávacím poľom a moderným dizajnom.
+- `chat.php`: Placeholder pre budúcu chatovaciu funkcionalitu.
+- `logo.png`: Logo projektu použité v dizajne a ako favicon.
+- `.github/workflows/deploy.yml`: Automatické nasadenie na server pri pushnutí do vetvy `main`.
+
+## Použité technológie
+- PHP
+- Bootstrap 5 (cez CDN)
+- Google Fonts (Inter)

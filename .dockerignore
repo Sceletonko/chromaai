@@ -1,0 +1,8 @@
+.git
+.github
+.idea
+.junie
+uploads
+Dockerfile
+docker-compose.yml
+README.md

@@ -1,23 +1,75 @@
 <?php
 session_start();
-// Jednoduchý PHP upload logik
+// Simple Supabase upload logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
-    $target_dir = "uploads/";
-    if (!file_exists($target_dir)) {
-        mkdir($target_dir, 0777, true);
-    }
-    $file_name = basename($_FILES["local_file"]["name"]);
-    $target_file = $target_dir . time() . "_" . $file_name;
+    $supabase_url = $_ENV['SUPABASE_URL'] ?? '';
+    $supabase_key = $_ENV['SUPABASE_KEY'] ?? '';
+    $bucket = $_ENV['SUPABASE_STORAGE_BUCKET'] ?? 'uploads';
     
-    if (move_uploaded_file($_FILES["local_file"]["tmp_name"], $target_file)) {
-        $upload_success = true;
-        $uploaded_file = [
-            'name' => $file_name,
-            'path' => $target_file,
-            'type' => $_FILES["local_file"]["type"],
-            'ext' => strtolower(pathinfo($file_name, PATHINFO_EXTENSION))
-        ];
+    $file_tmp = $_FILES['local_file']['tmp_name'];
+    $file_name = basename($_FILES["local_file"]["name"]);
+    $file_type = $_FILES["local_file"]["type"];
+    $storage_path = time() . "_" . $file_name;
+
+    if ($supabase_url && $supabase_key) {
+        $upload_url = rtrim($supabase_url, '/') . "/storage/v1/object/$bucket/$storage_path";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $upload_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_content_shim($file_tmp));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $supabase_key",
+            "Content-Type: $file_type"
+        ]);
+        
+        $result = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($http_code === 200 || $http_code === 201) {
+            $upload_success = true;
+            $public_url = rtrim($supabase_url, '/') . "/storage/v1/object/public/$bucket/$storage_path";
+            $uploaded_file = [
+                'name' => $file_name,
+                'path' => $public_url,
+                'type' => $file_type,
+                'ext' => strtolower(pathinfo($file_name, PATHINFO_EXTENSION))
+            ];
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'file' => $uploaded_file]);
+                exit();
+            }
+        } else {
+            $error_message = "Supabase Upload Failed: " . $result;
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $error_message]);
+                exit();
+            }
+        }
+    } else {
+        // Fallback to local if Supabase not configured
+        $target_dir = "uploads/";
+        if (!file_exists($target_dir)) mkdir($target_dir, 0777, true);
+        $target_file = $target_dir . time() . "_" . $file_name;
+        if (move_uploaded_file($file_tmp, $target_file)) {
+            $upload_success = true;
+            $uploaded_file = [
+                'name' => $file_name,
+                'path' => $target_file,
+                'type' => $file_type,
+                'ext' => strtolower(pathinfo($file_name, PATHINFO_EXTENSION))
+            ];
+        }
     }
+}
+
+function file_get_content_shim($path) {
+    return file_get_contents($path);
 }
 ?>
 <!DOCTYPE html>
@@ -404,9 +456,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
         <div class="ms-auto d-flex align-items-center gap-3">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <div class="dropdown profile-dropdown">
-                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_email']); ?>&background=9b30ff&color=fff" alt="Profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['user_name'] ?? $_SESSION['user_email']); ?>&background=9b30ff&color=fff" alt="Profile" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" aria-labelledby="profileDropdown">
-                        <li><div class="dropdown-header small text-muted"><?php echo htmlspecialchars($_SESSION['user_email']); ?></div></li>
+                        <li><div class="dropdown-header small text-muted"><?php echo htmlspecialchars($_SESSION['user_name'] ?? $_SESSION['user_email']); ?></div></li>
                         <li><a class="dropdown-item rounded" href="settings.php"><i class="bi bi-gear me-2"></i>Settings</a></li>
                         <li><a class="dropdown-item rounded" href="https://discord.gg/8nb72489hp" target="_blank"><i class="bi bi-discord me-2"></i>Discord</a></li>
                         <li><hr class="dropdown-divider"></li>
@@ -444,6 +496,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
 
         <div class="chat-container">
             <form id="chatForm" action="chat.php" method="GET">
+                <input type="hidden" name="model" id="modelInput" value="meta-llama/llama-3-8b-instruct:free">
                 <!-- File Preview -->
                 <div id="filePreview" class="file-preview-area <?php echo isset($uploaded_file) ? 'd-flex' : 'd-none'; ?>">
                     <?php if (isset($uploaded_file)): ?>
@@ -497,11 +550,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
                             <span id="currentModel">Auto Model</span>
                         </button>
                         <ul class="dropdown-menu shadow border-0">
-                            <li><button class="dropdown-item" onclick="setModel('GPT-3.5 Turbo')">GPT-3.5 Turbo</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Claude 3 Haiku')">Claude 3 Haiku</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Llama 3')">Llama 3 (8B)</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Mistral 7B')">Mistral 7B</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash')">Gemini 1.5 Flash</button></li>
+                            <li class="dropdown-header">GROQ MODELS</li>
+                            <li><button class="dropdown-item" onclick="setModel('Llama 3 70B', 'groq/llama3-70b-8192')">Llama 3 70B (Groq)</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Mixtral 8x7B', 'groq/mixtral-8x7b-32768')">Mixtral 8x7B (Groq)</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq)</button></li>
+                            <li class="dropdown-divider"></li>
+                            <li class="dropdown-header">OPENROUTER MODELS</li>
+                            <li><button class="dropdown-item" onclick="setModel('Llama 3 8B', 'meta-llama/llama-3-8b-instruct:free')">Llama 3 (8B)</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'mistralai/mistral-7b-instruct:free')">Mistral 7B</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'google/gemini-flash-1.5')">Gemini 1.5 Flash</button></li>
                         </ul>
                     </div>
                     <button class="send-btn" id="sendBtn">
@@ -571,8 +628,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
             chatInput.focus();
         }
 
-        function setModel(modelName) {
+        function setModel(modelName, modelId) {
             document.getElementById('currentModel').innerText = modelName;
+            document.getElementById('modelInput').value = modelId;
         }
 
         // Hide badge if backspaced at start

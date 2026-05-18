@@ -26,6 +26,10 @@ if (!isset($_SESSION['user_id'])) {
                 <div class="settings-card">
                     <h2 class="fw-bold mb-4">Account Settings</h2>
                     <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">Full Name</label>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['user_name'] ?? ''); ?>" disabled>
+                    </div>
+                    <div class="mb-4">
                         <label class="form-label small fw-bold text-muted">Email Address</label>
                         <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>" disabled>
                     </div>

@@ -7,10 +7,20 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm_password'] ?? '';
     
-    if (filter_var($email, FILTER_VALIDATE_EMAIL) && strlen($password) >= 6) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
+    } elseif (strlen($password) < 6) {
+        $error = "Password must be at least 6 characters.";
+    } elseif ($password !== $confirm_password) {
+        $error = "Passwords do not match.";
+    } elseif (empty($name)) {
+        $error = "Name is required.";
+    } else {
         $pdo = get_db_connection();
         
         // Check if user exists
@@ -22,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
             
-            $stmt = $pdo->prepare("INSERT INTO users (email, password, verification_code) VALUES (?, ?, ?)");
-            if ($stmt->execute([$email, $hashed_password, $verification_code])) {
+            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, verification_code) VALUES (?, ?, ?, ?)");
+            if ($stmt->execute([$name, $email, $hashed_password, $verification_code])) {
                 if (send_verification_email($email, $verification_code)) {
                     $_SESSION['verify_email'] = $email;
                     header("Location: verify.php");
@@ -40,8 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Registration failed. Please try again.";
             }
         }
-    } else {
-        $error = "Invalid email or password (min 6 chars).";
     }
 }
 ?>
@@ -117,12 +125,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST">
             <div class="mb-3">
+                <label class="form-label small fw-bold">Full Name</label>
+                <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+            </div>
+            <div class="mb-3">
                 <label class="form-label small fw-bold">Email Address</label>
                 <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
             </div>
             <div class="mb-3">
                 <label class="form-label small fw-bold">Password</label>
                 <input type="password" name="password" class="form-control" placeholder="Min. 6 characters" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Confirm Password</label>
+                <input type="password" name="confirm_password" class="form-control" placeholder="Repeat your password" required>
             </div>
             <button type="submit" class="btn btn-primary w-100 fw-bold">Sign Up</button>
         </form>

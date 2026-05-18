@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = $_POST['code'] ?? '';
     
     $pdo = get_db_connection();
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND verification_code = ?");
+    $stmt = $pdo->prepare("SELECT id, email, name FROM users WHERE email = ? AND verification_code = ?");
     $stmt->execute([$email, $code]);
     $user = $stmt->fetch();
     
@@ -24,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$user['id']]);
         
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_email'] = $email;
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['user_name'] = $user['name'] ?? 'User';
         unset($_SESSION['verify_email']);
         
         header("Location: index.php");

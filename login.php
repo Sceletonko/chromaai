@@ -2,6 +2,8 @@
 session_start();
 require_once 'db.php';
 
+require_once 'mail_helper.php';
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -14,16 +16,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
     
     if ($user && password_verify($password, $user['password'])) {
-        if (!$user['is_verified']) {
+        // Even if verified, we send a code for sign-in verification
+        $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        $stmt = $pdo->prepare("UPDATE users SET verification_code = ? WHERE id = ?");
+        $stmt->execute([$verification_code, $user['id']]);
+        
+        if (send_verification_email($email, $verification_code)) {
             $_SESSION['verify_email'] = $email;
             header("Location: verify.php");
             exit();
+        } else {
+            // Fallback for debug
+            $_SESSION['verify_email'] = $email;
+            header("Location: verify.php?debug_code=$verification_code");
+            exit();
         }
-        
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_email'] = $email;
-        header("Location: index.php");
-        exit();
     } else {
         $error = "Invalid email or password.";
     }

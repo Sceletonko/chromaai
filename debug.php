@@ -8,12 +8,25 @@ echo "<h3>ChromaAi Diagnostic Tool</h3>";
 echo "PHP Version: " . phpversion() . "<br>";
 
 // Check files
-$files = ['db.php', '.env', 'vendor/autoload.php', 'composer.json'];
+$files = ['db.php', '.env', 'vendor/autoload.php', 'composer.json', 'mail_helper.php'];
 foreach ($files as $file) {
-    echo "File '$file': " . (file_exists(__DIR__ . '/' . $file) ? "<span style='color:green'>Exists</span>" : "<span style='color:red'>Missing</span>") . "<br>";
+    $exists = file_exists(__DIR__ . '/' . $file);
+    echo "File '$file': " . ($exists ? "<span style='color:green'>Exists</span>" : "<span style='color:red'>Missing</span>") . "<br>";
+    if ($file === 'vendor/autoload.php' && !$exists) {
+        echo "<small style='color:orange'>Tip: If this is missing, you must upload the 'vendor' folder or run 'composer install'.</small><br>";
+    }
 }
 
 require_once 'db.php';
+
+echo "<h4>Library Checks</h4>";
+$classes = [
+    'Dotenv\Dotenv' => 'phpdotenv (for .env files)',
+    'PHPMailer\PHPMailer\PHPMailer' => 'PHPMailer (for emails)'
+];
+foreach ($classes as $class => $desc) {
+    echo "Class '$class' ($desc): " . (class_exists($class) ? "<span style='color:green'>Found</span>" : "<span style='color:red'>Not Found</span>") . "<br>";
+}
 
 // Check DB variables (redacted)
 echo "<h4>Environment Variables (loaded via get_env_var)</h4>";

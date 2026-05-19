@@ -4,6 +4,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 } else {
     // Fallback if vendor is missing - this prevents 500 error if someone forgot composer install
     // but features requiring vendor (like dotenv) won't work unless environment variables are set via hosting panel
+    error_log("Warning: 'vendor/autoload.php' not found in " . __DIR__ . ". Some features like PHPMailer will not work.");
 }
 
 if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/.env')) {

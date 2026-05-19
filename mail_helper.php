@@ -5,6 +5,12 @@ use PHPMailer\PHPMailer\Exception;
 // vendor is already handled by db.php which is required before this
 
 function send_verification_email($to_email, $code) {
+    if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+        error_log("CRITICAL ERROR: PHPMailer class not found. The 'vendor' folder might be missing or incomplete on the server.");
+        // If we are in debug mode or on local, maybe show more info
+        return false;
+    }
+
     $mail = new PHPMailer(true);
 
     try {

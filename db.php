@@ -1,16 +1,30 @@
 <?php
-require 'vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+} else {
+    // Fallback if vendor is missing - this prevents 500 error if someone forgot composer install
+    // but features requiring vendor (like dotenv) won't work unless environment variables are set via hosting panel
+}
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->load();
+}
+
+function get_env_var($key, $default = null) {
+    if (isset($_ENV[$key])) return $_ENV[$key];
+    if (isset($_SERVER[$key])) return $_SERVER[$key];
+    $val = getenv($key);
+    return ($val !== false) ? $val : $default;
+}
 
 function get_db_connection() {
-    $type = $_ENV['DB_TYPE'] ?? 'mysql';
-    $host = $_ENV['DB_HOST'] ?? 'localhost';
-    $port = $_ENV['DB_PORT'] ?? ($type === 'mysql' ? '3306' : '5432');
-    $db   = $_ENV['DB_NAME'] ?? 'chroma_db';
-    $user = $_ENV['DB_USER'] ?? 'root';
-    $pass = $_ENV['DB_PASS'] ?? '';
+    $type = get_env_var('DB_TYPE', 'mysql');
+    $host = get_env_var('DB_HOST', 'localhost');
+    $port = get_env_var('DB_PORT', ($type === 'mysql' ? '3306' : '5432'));
+    $db   = get_env_var('DB_NAME', 'chroma_db');
+    $user = get_env_var('DB_USER', 'root');
+    $pass = get_env_var('DB_PASS', '');
     $charset = 'utf8mb4';
 
     if ($type === 'mysql') {
@@ -28,6 +42,7 @@ function get_db_connection() {
     try {
          return new PDO($dsn, $user, $pass, $options);
     } catch (\PDOException $e) {
-         throw new \PDOException($e->getMessage(), (int)$e->getCode());
+         error_log("Database Connection Error: " . $e->getMessage());
+         throw new \PDOException("Connection failed: " . $e->getMessage(), (int)$e->getCode());
     }
 }

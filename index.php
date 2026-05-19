@@ -1,10 +1,12 @@
 <?php
 session_start();
+require_once 'db.php';
+
 // Simple Supabase upload logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
-    $supabase_url = $_ENV['SUPABASE_URL'] ?? '';
-    $supabase_key = $_ENV['SUPABASE_KEY'] ?? '';
-    $bucket = $_ENV['SUPABASE_STORAGE_BUCKET'] ?? 'uploads';
+    $supabase_url = get_env_var('SUPABASE_URL', '');
+    $supabase_key = get_env_var('SUPABASE_KEY', '');
+    $bucket = get_env_var('SUPABASE_STORAGE_BUCKET', 'uploads');
     
     $file_tmp = $_FILES['local_file']['tmp_name'];
     $file_name = basename($_FILES["local_file"]["name"]);
@@ -481,7 +483,6 @@ function file_get_content_shim($path) {
         <div class="offcanvas-body">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php
-                require_once 'db.php';
                 try {
                     $pdo = get_db_connection();
                     $stmt = $pdo->prepare("SELECT id, title FROM chats WHERE user_id = ? ORDER BY created_at DESC LIMIT 15");
@@ -515,6 +516,7 @@ function file_get_content_shim($path) {
         <div class="chat-container">
             <form id="chatForm" action="chat.php" method="GET">
                 <input type="hidden" name="model" id="modelInput" value="meta-llama/llama-3-8b-instruct:free">
+                <input type="hidden" name="image_url" id="imageUrlInput" value="<?php echo $uploaded_file['path'] ?? ''; ?>">
                 <!-- File Preview -->
                 <div id="filePreview" class="file-preview-area <?php echo isset($uploaded_file) ? 'd-flex' : 'd-none'; ?>">
                     <?php if (isset($uploaded_file)): ?>
@@ -571,12 +573,12 @@ function file_get_content_shim($path) {
                             <li class="dropdown-header">GROQ MODELS</li>
                             <li><button class="dropdown-item" onclick="setModel('Llama 3 70B', 'groq/llama3-70b-8192')">Llama 3 70B (Groq)</button></li>
                             <li><button class="dropdown-item" onclick="setModel('Mixtral 8x7B', 'groq/mixtral-8x7b-32768')">Mixtral 8x7B (Groq)</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq)</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq) <span class="badge bg-info">Vision</span></button></li>
                             <li class="dropdown-divider"></li>
                             <li class="dropdown-header">OPENROUTER MODELS</li>
                             <li><button class="dropdown-item" onclick="setModel('Llama 3 8B', 'meta-llama/llama-3-8b-instruct:free')">Llama 3 (8B)</button></li>
                             <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'mistralai/mistral-7b-instruct:free')">Mistral 7B</button></li>
-                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'google/gemini-flash-1.5')">Gemini 1.5 Flash</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'google/gemini-flash-1.5')">Gemini 1.5 Flash <span class="badge bg-info">Vision</span></button></li>
                         </ul>
                     </div>
                     <button class="send-btn" id="sendBtn">
@@ -664,6 +666,7 @@ function file_get_content_shim($path) {
             preview.classList.remove('d-flex');
             preview.classList.add('d-none');
             preview.innerHTML = '';
+            document.getElementById('imageUrlInput').value = '';
         }
     </script>
 </body>

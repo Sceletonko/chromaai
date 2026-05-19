@@ -9,12 +9,17 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $chat_id = $_GET['id'] ?? null;
-$pdo = get_db_connection();
+try {
+    $pdo = get_db_connection();
+} catch (Exception $e) {
+    die("Database connection failed. Please check your .env file and ensure the database is running. Error: " . $e->getMessage());
+}
 
 // Handle initial query from index.php
 if (isset($_GET['q']) && !$chat_id) {
     $prompt = $_GET['q'];
     $model = $_GET['model'] ?? 'meta-llama/llama-3-8b-instruct:free';
+    $image_url = $_GET['image_url'] ?? null;
     
     // Create new chat
     $stmt = $pdo->prepare("INSERT INTO chats (user_id, title, model) VALUES (?, ?, ?)");
@@ -23,13 +28,14 @@ if (isset($_GET['q']) && !$chat_id) {
     $new_chat_id = $pdo->lastInsertId();
     
     // Save user message
-    $stmt = $pdo->prepare("INSERT INTO messages (chat_id, role, content) VALUES (?, 'user', ?)");
-    $stmt->execute([$new_chat_id, $prompt]);
+    $stmt = $pdo->prepare("INSERT INTO messages (chat_id, role, content, image_url) VALUES (?, 'user', ?, ?)");
+    $stmt->execute([$new_chat_id, $prompt, $image_url]);
     
     // We could call AI here, but it's better to redirect and let the client-side handle it 
     // or just show the user message and let the client-side trigger the AI response.
     // Actually, let's redirect to the new chat page.
-    header("Location: chat.php?id=$new_chat_id&first=1");
+    $redirect_url = "chat.php?id=$new_chat_id&first=1";
+    header("Location: $redirect_url");
     exit();
 }
 
@@ -189,12 +195,12 @@ $chat_history = $stmt->fetchAll();
                     <li class="dropdown-header">GROQ MODELS</li>
                     <li><button class="dropdown-item" onclick="setModel('Llama 3 70B', 'groq/llama3-70b-8192')">Llama 3 70B (Groq)</button></li>
                     <li><button class="dropdown-item" onclick="setModel('Mixtral 8x7B', 'groq/mixtral-8x7b-32768')">Mixtral 8x7B (Groq)</button></li>
-                    <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq)</button></li>
+                    <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq) <span class="badge bg-info">Vision</span></button></li>
                     <li class="dropdown-divider"></li>
                     <li class="dropdown-header">OPENROUTER MODELS</li>
                     <li><button class="dropdown-item" onclick="setModel('Llama 3 8B', 'meta-llama/llama-3-8b-instruct:free')">Llama 3 (8B)</button></li>
                     <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'mistralai/mistral-7b-instruct:free')">Mistral 7B</button></li>
-                    <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'google/gemini-flash-1.5')">Gemini 1.5 Flash</button></li>
+                    <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'google/gemini-flash-1.5')">Gemini 1.5 Flash <span class="badge bg-info">Vision</span></button></li>
                 </ul>
             </div>
             <div class="d-flex gap-2">
@@ -220,8 +226,17 @@ $chat_history = $stmt->fetchAll();
                             <?php endif; ?>
                         </div>
                         <div class="message-content" id="msg-<?php echo $msg['id']; ?>">
-                            <?php if ($msg['image_url']): ?>
-                                <img src="<?php echo $msg['image_url']; ?>" alt="Uploaded image">
+                            <?php if ($msg['image_url']): 
+                                $ext = strtolower(pathinfo($msg['image_url'], PATHINFO_EXTENSION));
+                                $is_img = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']);
+                                if ($is_img): ?>
+                                    <img src="<?php echo $msg['image_url']; ?>" alt="Uploaded image">
+                                <?php else: ?>
+                                    <div class="attachment-box p-2 mb-2 bg-light border rounded d-flex align-items-center gap-2">
+                                        <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+                                        <a href="<?php echo $msg['image_url']; ?>" target="_blank" class="small text-decoration-none">Attached File: <?php echo basename($msg['image_url']); ?></a>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                             <div class="text-body"><?php echo htmlspecialchars($msg['content']); ?></div>
                         </div>
@@ -379,7 +394,19 @@ $chat_history = $stmt->fetchAll();
             contentDiv.className = 'message-content';
             
             let html = '';
-            if (imageUrl) html += `<img src="${imageUrl}">`;
+            if (imageUrl) {
+                const ext = imageUrl.split('.').pop().toLowerCase().split('?')[0];
+                const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext) || imageUrl.startsWith('data:image');
+                if (isImg) {
+                    html += `<img src="${imageUrl}">`;
+                } else {
+                    html += `
+                        <div class="attachment-box p-2 mb-2 bg-light border rounded d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-text fs-4 text-primary"></i>
+                            <a href="${imageUrl}" target="_blank" class="small text-decoration-none">Attached File: ${imageUrl.split('/').pop()}</a>
+                        </div>`;
+                }
+            }
             
             if (role === 'assistant') {
                 html += `<div class="text-body">${marked.parse(content)}</div>`;
@@ -500,6 +527,22 @@ $chat_history = $stmt->fetchAll();
             return div.innerHTML;
         }
 
+        function copyMessage(id) {
+            const content = document.getElementById('msg-' + id).querySelector('.text-body').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                alert('Message copied!');
+            });
+        }
+
+        function copyText(btn) {
+            const content = btn.closest('.message-wrapper').querySelector('.text-body').innerText;
+            navigator.clipboard.writeText(content).then(() => {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check"></i> Copied';
+                setTimeout(() => btn.innerHTML = original, 2000);
+            });
+        }
+
         async function updateSidebar() {
             const response = await fetch('ajax_chat.php', {
                 method: 'POST',
@@ -587,6 +630,12 @@ $chat_history = $stmt->fetchAll();
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
             
+            // Show loading state
+            const uploadBtn = input.previousElementSibling.previousElementSibling; // Button with bi-image
+            const originalIcon = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div>';
+            uploadBtn.disabled = true;
+
             const formData = new FormData();
             formData.append('local_file', file);
 
@@ -607,6 +656,11 @@ $chat_history = $stmt->fetchAll();
                 }
             } catch (e) {
                 console.error('Upload failed', e);
+                alert('Upload failed. Please check your connection or server settings.');
+            } finally {
+                uploadBtn.innerHTML = originalIcon;
+                uploadBtn.disabled = false;
+                input.value = ''; // Reset input
             }
         }
 

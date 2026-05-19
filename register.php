@@ -21,33 +21,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (empty($name)) {
         $error = "Name is required.";
     } else {
-        $pdo = get_db_connection();
+        try {
+            $pdo = get_db_connection();
+        } catch (Exception $e) {
+            $error = "Database connection error. Please check configuration.";
+        }
         
-        // Check if user exists
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        if ($stmt->fetch()) {
-            $error = "Email already registered.";
-        } else {
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, verification_code) VALUES (?, ?, ?, ?)");
-            if ($stmt->execute([$name, $email, $hashed_password, $verification_code])) {
-                if (send_verification_email($email, $verification_code)) {
-                    $_SESSION['verify_email'] = $email;
-                    header("Location: verify.php");
-                    exit();
-                } else {
-                    $success = "Registered, but failed to send email. Code is: $verification_code (Debug mode)";
-                    // In a real app, you'd handle this better.
-                    $_SESSION['verify_email'] = $email;
-                    // For now, let's still redirect to verify so they can at least see it works if we show the code for debug
-                    header("Location: verify.php?debug_code=$verification_code");
-                    exit();
-                }
+        if (isset($pdo)) {
+            // Check if user exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                $error = "Email already registered.";
             } else {
-                $error = "Registration failed. Please try again.";
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                
+                $stmt = $pdo->prepare("INSERT INTO users (name, email, password, verification_code) VALUES (?, ?, ?, ?)");
+                if ($stmt->execute([$name, $email, $hashed_password, $verification_code])) {
+                    if (send_verification_email($email, $verification_code)) {
+                        $_SESSION['verify_email'] = $email;
+                        header("Location: verify.php");
+                        exit();
+                    } else {
+                        $success = "Registered, but failed to send email. Code is: $verification_code (Debug mode)";
+                        // In a real app, you'd handle this better.
+                        $_SESSION['verify_email'] = $email;
+                        // For now, let's still redirect to verify so they can at least see it works if we show the code for debug
+                        header("Location: verify.php?debug_code=$verification_code");
+                        exit();
+                    }
+                } else {
+                    $error = "Registration failed. Please try again.";
+                }
             }
         }
     }

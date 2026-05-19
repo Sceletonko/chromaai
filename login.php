@@ -10,30 +10,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    $pdo = get_db_connection();
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    try {
+        $pdo = get_db_connection();
+    } catch (Exception $e) {
+        $error = "Database connection error. Please check configuration.";
+    }
     
-    if ($user && password_verify($password, $user['password'])) {
-        // Even if verified, we send a code for sign-in verification
-        $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+    if (isset($pdo)) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
         
-        $stmt = $pdo->prepare("UPDATE users SET verification_code = ? WHERE id = ?");
-        $stmt->execute([$verification_code, $user['id']]);
-        
-        if (send_verification_email($email, $verification_code)) {
-            $_SESSION['verify_email'] = $email;
-            header("Location: verify.php");
-            exit();
+        if ($user && password_verify($password, $user['password'])) {
+            // Even if verified, we send a code for sign-in verification
+            $verification_code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            $stmt = $pdo->prepare("UPDATE users SET verification_code = ? WHERE id = ?");
+            $stmt->execute([$verification_code, $user['id']]);
+            
+            if (send_verification_email($email, $verification_code)) {
+                $_SESSION['verify_email'] = $email;
+                header("Location: verify.php");
+                exit();
+            } else {
+                // Fallback for debug
+                $_SESSION['verify_email'] = $email;
+                header("Location: verify.php?debug_code=$verification_code");
+                exit();
+            }
         } else {
-            // Fallback for debug
-            $_SESSION['verify_email'] = $email;
-            header("Location: verify.php?debug_code=$verification_code");
-            exit();
+            $error = "Invalid email or password.";
         }
-    } else {
-        $error = "Invalid email or password.";
     }
 }
 ?>

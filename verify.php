@@ -14,24 +14,31 @@ if (!$email) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = $_POST['code'] ?? '';
     
-    $pdo = get_db_connection();
-    $stmt = $pdo->prepare("SELECT id, email, name FROM users WHERE email = ? AND verification_code = ?");
-    $stmt->execute([$email, $code]);
-    $user = $stmt->fetch();
+    try {
+        $pdo = get_db_connection();
+    } catch (Exception $e) {
+        $error = "Database connection error.";
+    }
     
-    if ($user) {
-        $stmt = $pdo->prepare("UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?");
-        $stmt->execute([$user['id']]);
+    if (isset($pdo)) {
+        $stmt = $pdo->prepare("SELECT id, email, name FROM users WHERE email = ? AND verification_code = ?");
+        $stmt->execute([$email, $code]);
+        $user = $stmt->fetch();
         
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['user_name'] = $user['name'] ?? 'User';
-        unset($_SESSION['verify_email']);
-        
-        header("Location: index.php");
-        exit();
-    } else {
-        $error = "Invalid verification code.";
+        if ($user) {
+            $stmt = $pdo->prepare("UPDATE users SET is_verified = 1, verification_code = NULL WHERE id = ?");
+            $stmt->execute([$user['id']]);
+            
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_name'] = $user['name'] ?? 'User';
+            unset($_SESSION['verify_email']);
+            
+            header("Location: index.php");
+            exit();
+        } else {
+            $error = "Invalid verification code.";
+        }
     }
 }
 ?>

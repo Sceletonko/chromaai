@@ -2,7 +2,7 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php';
+// vendor is already handled by db.php which is required before this
 
 function send_verification_email($to_email, $code) {
     $mail = new PHPMailer(true);
@@ -10,15 +10,15 @@ function send_verification_email($to_email, $code) {
     try {
         // Server settings
         $mail->isSMTP();
-        $mail->Host       = $_ENV['MAIL_HOST'];
+        $mail->Host       = get_env_var('MAIL_HOST');
         $mail->SMTPAuth   = true;
-        $mail->Username   = $_ENV['MAIL_USERNAME'];
-        $mail->Password   = $_ENV['MAIL_PASSWORD'];
+        $mail->Username   = get_env_var('MAIL_USERNAME');
+        $mail->Password   = get_env_var('MAIL_PASSWORD');
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = $_ENV['MAIL_PORT'];
+        $mail->Port       = get_env_var('MAIL_PORT', 587);
 
         // Recipients
-        $mail->setFrom($_ENV['MAIL_FROM'], $_ENV['MAIL_FROM_NAME']);
+        $mail->setFrom(get_env_var('MAIL_FROM'), get_env_var('MAIL_FROM_NAME'));
         $mail->addAddress($to_email);
 
         // Content

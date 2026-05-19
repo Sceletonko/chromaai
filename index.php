@@ -498,7 +498,7 @@ function file_get_content_shim($path) {
                         <p class="text-center text-muted small mt-4">No recent chats found.</p>
                     <?php endif;
                 } catch (Exception $e) {
-                    echo '<p class="text-danger small">Error loading history</p>';
+                    echo '<p class="text-danger small">Error loading history: ' . htmlspecialchars($e->getMessage()) . '</p>';
                 }
                 ?>
             <?php else: ?>

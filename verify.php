@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo = get_db_connection();
     } catch (Exception $e) {
-        $error = "Database connection error.";
+        $error = "Database connection error: " . $e->getMessage();
     }
     
     if (isset($pdo)) {

@@ -14,9 +14,8 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $action = $_POST['action'] ?? '';
 
-$pdo = get_db_connection();
-
 try {
+    $pdo = get_db_connection();
     if ($action === 'send' || $action === 'regenerate') {
         $chat_id = $_POST['chat_id'] ?? null;
         $prompt = $_POST['prompt'] ?? '';

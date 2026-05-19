@@ -28,6 +28,7 @@ if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/.env')) {
             
             if (!isset($_ENV[$name])) $_ENV[$name] = $value;
             if (!isset($_SERVER[$name])) $_SERVER[$name] = $value;
+            putenv("$name=$value");
         }
     }
 }

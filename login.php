@@ -1,4 +1,15 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    echo "<b>Error [$errno]:</b> $errstr in <b>$errfile</b> on line <b>$errline</b><br>";
+});
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== NULL && ($error['type'] === E_ERROR || $error['type'] === E_PARSE || $error['type'] === E_CORE_ERROR || $error['type'] === E_COMPILE_ERROR)) {
+        echo "<b>Fatal Error:</b> " . $error['message'] . " in <b>" . $error['file'] . "</b> on line <b>" . $error['line'] . "</b><br>";
+    }
+});
 session_start();
 require_once 'db.php';
 
@@ -12,11 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         $pdo = get_db_connection();
-    } catch (Exception $e) {
-        $error = "Database connection error: " . $e->getMessage();
-    }
-    
-    if (isset($pdo)) {
+        
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
@@ -41,6 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Invalid email or password.";
         }
+    } catch (Exception $e) {
+        $error = "Error: " . $e->getMessage();
     }
 }
 ?>

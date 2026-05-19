@@ -48,7 +48,21 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX (chat_id)
     )");
-    echo "Table 'messages' verified/created.\n";
+    // Ensure image_url column exists in messages
+    $stmt = $pdo->query("SHOW COLUMNS FROM messages LIKE 'image_url'");
+    if (!$stmt->fetch()) {
+        $pdo->exec("ALTER TABLE messages ADD COLUMN image_url TEXT NULL AFTER content");
+        echo "Column 'image_url' added to 'messages' successfully.\n";
+    }
+
+    // Ensure model column exists in chats
+    $stmt = $pdo->query("SHOW COLUMNS FROM chats LIKE 'model'");
+    if (!$stmt->fetch()) {
+        $pdo->exec("ALTER TABLE chats ADD COLUMN model VARCHAR(100) AFTER title");
+        echo "Column 'model' added to 'chats' successfully.\n";
+    }
+
+    echo "Database verification complete.\n";
 
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage() . "\n";

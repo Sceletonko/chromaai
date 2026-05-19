@@ -85,8 +85,13 @@ $chat_history = $stmt->fetchAll();
         .sidebar { width: 280px; background: var(--sidebar-bg); border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; transition: transform 0.3s; }
         .sidebar-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
         .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
-        .history-item { padding: 10px 15px; border-radius: 10px; cursor: pointer; margin-bottom: 5px; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; color: #4b5563; }
+        .history-item { padding: 10px 15px; border-radius: 10px; cursor: pointer; margin-bottom: 5px; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; color: #4b5563; position: relative; }
         .history-item:hover, .history-item.active { background: #e5e7eb; color: #000; }
+        .history-item .item-actions { display: none; position: absolute; right: 10px; background: inherit; padding-left: 10px; }
+        .history-item:hover .item-actions { display: flex; gap: 5px; }
+        .item-action-btn { background: none; border: none; padding: 2px; color: #6b7280; cursor: pointer; }
+        .item-action-btn:hover { color: var(--primary-purple); }
+        .history-item .chat-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
         .new-chat-btn { width: 100%; border: 1px solid #e5e7eb; background: white; padding: 10px; border-radius: 10px; font-weight: 600; margin-bottom: 20px; transition: all 0.2s; }
         .new-chat-btn:hover { background: var(--light-purple); border-color: var(--primary-purple); }
 
@@ -153,8 +158,13 @@ $chat_history = $stmt->fetchAll();
             <div class="text-muted small fw-bold mb-2 px-2">RECENT CHATS</div>
             <div id="chatHistory">
                 <?php foreach ($chat_history as $h): ?>
-                    <div class="history-item <?php echo $chat_id == $h['id'] ? 'active' : ''; ?>" onclick="location.href='chat.php?id=<?php echo $h['id']; ?>'">
-                        <i class="bi bi-chat-left"></i> <?php echo htmlspecialchars($h['title']); ?>
+                    <div class="history-item <?php echo $chat_id == $h['id'] ? 'active' : ''; ?>" onclick="if(!event.target.closest('.item-action-btn')) location.href='chat.php?id=<?php echo $h['id']; ?>'">
+                        <i class="bi bi-chat-left"></i> 
+                        <span class="chat-title"><?php echo htmlspecialchars($h['title']); ?></span>
+                        <div class="item-actions">
+                            <button class="item-action-btn" onclick="renameChat(event, <?php echo $h['id']; ?>, <?php echo htmlspecialchars(json_encode($h['title'])); ?>)"><i class="bi bi-pencil"></i></button>
+                            <button class="item-action-btn" onclick="deleteChat(event, <?php echo $h['id']; ?>)"><i class="bi bi-trash"></i></button>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -501,10 +511,76 @@ $chat_history = $stmt->fetchAll();
             data.chats.forEach(c => {
                 const item = document.createElement('div');
                 item.className = 'history-item' + (chatId == c.id ? ' active' : '');
-                item.innerHTML = `<i class="bi bi-chat-left"></i> ${escapeHtml(c.title)}`;
-                item.onclick = () => location.href = 'chat.php?id=' + c.id;
+                item.onclick = function(e) {
+                    if(!e.target.closest('.item-action-btn')) location.href = 'chat.php?id=' + c.id;
+                };
+                item.innerHTML = `
+                    <i class="bi bi-chat-left"></i> 
+                    <span class="chat-title">${escapeHtml(c.title)}</span>
+                    <div class="item-actions">
+                        <button class="item-action-btn" onclick='renameChat(event, ${c.id}, ${JSON.stringify(c.title)})'><i class="bi bi-pencil"></i></button>
+                        <button class="item-action-btn" onclick="deleteChat(event, ${c.id})"><i class="bi bi-trash"></i></button>
+                    </div>
+                `;
                 container.appendChild(item);
             });
+        }
+
+        async function deleteChat(event, id) {
+            event.stopPropagation();
+            if (!confirm('Are you sure you want to delete this chat?')) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'delete_chat');
+                formData.append('chat_id', id);
+
+                const response = await fetch('ajax_chat.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    if (chatId == id) {
+                        location.href = 'chat.php';
+                    } else {
+                        updateSidebar();
+                    }
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Error deleting chat');
+            }
+        }
+
+        async function renameChat(event, id, currentTitle) {
+            event.stopPropagation();
+            const newTitle = prompt('Enter new chat title:', currentTitle);
+            if (newTitle === null || newTitle.trim() === '' || newTitle === currentTitle) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('action', 'rename_chat');
+                formData.append('chat_id', id);
+                formData.append('title', newTitle);
+
+                const response = await fetch('ajax_chat.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateSidebar();
+                    if (chatId == id) {
+                        // Optionally update header title if we had one displayed
+                    }
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Error renaming chat');
+            }
         }
 
         async function handleFileUpload(input) {

@@ -479,12 +479,30 @@ function file_get_content_shim($path) {
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <div class="chat-history-item"><i class="bi bi-chat-left-text me-2"></i> How to build a website</div>
-            <div class="chat-history-item"><i class="bi bi-chat-left-text me-2"></i> Python script for data...</div>
-            <div class="chat-history-item"><i class="bi bi-chat-left-text me-2"></i> Marketing strategy 2024</div>
-            <div class="text-center mt-4">
-                <p class="text-muted small">Your recent chats will appear here</p>
-            </div>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <?php
+                require_once 'db.php';
+                try {
+                    $pdo = get_db_connection();
+                    $stmt = $pdo->prepare("SELECT id, title FROM chats WHERE user_id = ? ORDER BY created_at DESC LIMIT 15");
+                    $stmt->execute([$_SESSION['user_id']]);
+                    $history = $stmt->fetchAll();
+                    if ($history):
+                        foreach ($history as $h): ?>
+                            <div class="chat-history-item" onclick="location.href='chat.php?id=<?php echo $h['id']; ?>'">
+                                <i class="bi bi-chat-left-text me-2"></i> <?php echo htmlspecialchars($h['title']); ?>
+                            </div>
+                        <?php endforeach;
+                    else: ?>
+                        <p class="text-center text-muted small mt-4">No recent chats found.</p>
+                    <?php endif;
+                } catch (Exception $e) {
+                    echo '<p class="text-danger small">Error loading history</p>';
+                }
+                ?>
+            <?php else: ?>
+                <p class="text-center text-muted small mt-4">Please sign in to view history.</p>
+            <?php endif; ?>
         </div>
     </div>
 

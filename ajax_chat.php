@@ -1,5 +1,7 @@
 <?php
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once 'db.php';
 
 header('Content-Type: application/json');
@@ -99,6 +101,43 @@ if ($action === 'send' || $action === 'regenerate') {
     $stmt->execute([$user_id]);
     $chats = $stmt->fetchAll();
     echo json_encode(['chats' => $chats]);
+} else if ($action === 'delete_chat') {
+    $chat_id = $_POST['chat_id'] ?? null;
+    
+    // Verify chat belongs to user
+    $stmt = $pdo->prepare("SELECT id FROM chats WHERE id = ? AND user_id = ?");
+    $stmt->execute([$chat_id, $user_id]);
+    if ($stmt->fetch()) {
+        // Delete messages first (or rely on CASCADE if set, but let's be safe)
+        $stmt = $pdo->prepare("DELETE FROM messages WHERE chat_id = ?");
+        $stmt->execute([$chat_id]);
+        
+        $stmt = $pdo->prepare("DELETE FROM chats WHERE id = ?");
+        $stmt->execute([$chat_id]);
+        
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => 'Chat not found or unauthorized']);
+    }
+} else if ($action === 'rename_chat') {
+    $chat_id = $_POST['chat_id'] ?? null;
+    $new_title = $_POST['title'] ?? '';
+    
+    if (empty($new_title)) {
+        echo json_encode(['error' => 'Title cannot be empty']);
+        exit();
+    }
+    
+    // Verify chat belongs to user
+    $stmt = $pdo->prepare("SELECT id FROM chats WHERE id = ? AND user_id = ?");
+    $stmt->execute([$chat_id, $user_id]);
+    if ($stmt->fetch()) {
+        $stmt = $pdo->prepare("UPDATE chats SET title = ? WHERE id = ?");
+        $stmt->execute([$new_title, $chat_id]);
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => 'Chat not found or unauthorized']);
+    }
 }
 
 function call_ai_api($model, $messages, $image_url = null) {
@@ -107,11 +146,11 @@ function call_ai_api($model, $messages, $image_url = null) {
     $url = '';
     
     if ($is_groq) {
-        $api_key = $_ENV['GROQ_API_KEY'] ?? '';
+        $api_key = $_ENV['GROQ_API_KEY'] ?? getenv('GROQ_API_KEY') ?? '';
         $url = "https://api.groq.com/openai/v1/chat/completions";
         $model = str_replace('groq/', '', $model);
     } else {
-        $api_key = $_ENV['OPENROUTER_API_KEY'] ?? '';
+        $api_key = $_ENV['OPENROUTER_API_KEY'] ?? getenv('OPENROUTER_API_KEY') ?? '';
         $url = "https://openrouter.ai/api/v1/chat/completions";
     }
 
@@ -149,7 +188,11 @@ function call_ai_api($model, $messages, $image_url = null) {
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     
     $result = curl_exec($ch);
-    if (curl_errno($ch)) return 'Error:' . curl_error($ch);
+    if (curl_errno($ch)) {
+        $error = 'Curl Error:' . curl_error($ch);
+        error_log($error);
+        return $error;
+    }
     
     $decoded = json_decode($result, true);
     curl_close($ch);
@@ -157,6 +200,8 @@ function call_ai_api($model, $messages, $image_url = null) {
     if (isset($decoded['choices'][0]['message']['content'])) {
         return $decoded['choices'][0]['message']['content'];
     } else {
-        return "API Error: " . ($decoded['error']['message'] ?? 'Unknown error');
+        $error_msg = "API Error: " . ($decoded['error']['message'] ?? 'Unknown error');
+        error_log("AI API Error: " . $result);
+        return $error_msg;
     }
 }

@@ -30,6 +30,7 @@ function send_verification_email($to_email, $code) {
         $mail->send();
         return true;
     } catch (Exception $e) {
+        error_log("PHPMailer Error: " . $mail->ErrorInfo);
         return false;
     }
 }

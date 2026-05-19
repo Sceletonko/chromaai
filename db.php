@@ -9,6 +9,27 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 if (class_exists('Dotenv\Dotenv') && file_exists(__DIR__ . '/.env')) {
     $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
     $dotenv->load();
+} elseif (file_exists(__DIR__ . '/.env') && is_readable(__DIR__ . '/.env')) {
+    // Manual fallback if Dotenv is not available (e.g. vendor folder not uploaded)
+    $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (!$line || strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            // Remove optional quotes and handle comments
+            if (preg_match('/^["\'](.*)["\']$/', $value, $m)) {
+                $value = $m[1];
+            } else {
+                $value = trim(explode('#', $value)[0]);
+            }
+            
+            if (!isset($_ENV[$name])) $_ENV[$name] = $value;
+            if (!isset($_SERVER[$name])) $_SERVER[$name] = $value;
+        }
+    }
 }
 
 function get_env_var($key, $default = null) {
@@ -24,7 +45,7 @@ function get_db_connection() {
     $port = get_env_var('DB_PORT', ($type === 'mysql' ? '3306' : '5432'));
     $db   = get_env_var('DB_NAME', 'chroma_db');
     $user = get_env_var('DB_USER', 'root');
-    $pass = get_env_var('DB_PASS', '');
+    $pass = get_env_var('DB_PASS', get_env_var('DB_PASSWORD', ''));
     $charset = 'utf8mb4';
 
     if ($type === 'mysql') {

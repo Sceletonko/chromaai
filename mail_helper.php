@@ -20,11 +20,18 @@ function send_verification_email($to_email, $code) {
         $mail->SMTPAuth   = true;
         $mail->Username   = get_env_var('MAIL_USERNAME');
         $mail->Password   = get_env_var('MAIL_PASSWORD');
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = get_env_var('MAIL_PORT', 587);
+        
+        $port = get_env_var('MAIL_PORT', 587);
+        $mail->Port = $port;
+        
+        if ($port == 465) {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } else {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        }
 
         // Recipients
-        $mail->setFrom(get_env_var('MAIL_FROM'), get_env_var('MAIL_FROM_NAME'));
+        $mail->setFrom(get_env_var('MAIL_FROM', get_env_var('MAIL_USERNAME')), get_env_var('MAIL_FROM_NAME', 'ChromaAi'));
         $mail->addAddress($to_email);
 
         // Content

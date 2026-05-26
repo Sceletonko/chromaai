@@ -13,6 +13,29 @@ register_shutdown_function(function() {
 session_start();
 require_once 'db.php';
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id'];
+
+// Check if user is verified
+try {
+    $pdo = get_db_connection();
+    $stmt = $pdo->prepare("SELECT is_verified FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user_status = $stmt->fetch();
+    
+    if ($user_status && !$user_status['is_verified']) {
+        $_SESSION['verify_email'] = $_SESSION['user_email']; // Ensure it's set for verify.php
+        header("Location: verify.php");
+        exit();
+    }
+} catch (Exception $e) {
+    // If table doesn't have is_verified yet, we might want to skip or handle it
+}
+
 // Simple Supabase upload logic
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['local_file'])) {
     $supabase_url = get_env_var('SUPABASE_URL', '');
@@ -586,6 +609,13 @@ function file_get_content_shim($path) {
                             <li><button class="dropdown-item" onclick="setModel('Mixtral 8x7B', 'groq/mixtral-8x7b-32768')">Mixtral 8x7B (Groq)</button></li>
                             <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq) <span class="badge bg-info">Vision</span></button></li>
                             <li class="dropdown-divider"></li>
+                            <li class="dropdown-header">GOOGLE GEMINI (Direct)</li>
+                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'gemini-1.5-flash')">Gemini 1.5 Flash</button></li>
+                            <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Pro', 'gemini-1.5-pro')">Gemini 1.5 Pro</button></li>
+                            <li class="dropdown-divider"></li>
+                            <li class="dropdown-header">HUGGING FACE</li>
+                            <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'huggingface/mistralai/Mistral-7B-v0.1')">Mistral 7B</button></li>
+                            <li class="dropdown-divider"></li>
                             <li class="dropdown-header">OPENROUTER MODELS</li>
                             <li><button class="dropdown-item" onclick="setModel('Llama 3 8B', 'meta-llama/llama-3-8b-instruct:free')">Llama 3 (8B)</button></li>
                             <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'mistralai/mistral-7b-instruct:free')">Mistral 7B</button></li>
@@ -652,11 +682,14 @@ function file_get_content_shim($path) {
             if (type === 'image') {
                 typeBadge.innerHTML = '<i class="bi bi-image"></i> Image';
                 chatInput.placeholder = 'Describe the image you want to create...';
+                chatInput.value = '/imagine ';
             } else {
                 typeBadge.innerHTML = '<i class="bi bi-code-slash"></i> Code';
                 chatInput.placeholder = 'Describe the code you want to generate...';
+                chatInput.value = '/code ';
             }
             chatInput.focus();
+            chatInput.dispatchEvent(new Event('input'));
         }
 
         function setModel(modelName, modelId) {

@@ -199,6 +199,13 @@ $chat_history = $stmt->fetchAll();
                     <li><button class="dropdown-item" onclick="setModel('Mixtral 8x7B', 'groq/mixtral-8x7b-32768')">Mixtral 8x7B (Groq)</button></li>
                     <li><button class="dropdown-item" onclick="setModel('Llama 3.2 Vision', 'groq/llama-3.2-11b-vision-preview')">Llama 3.2 Vision (Groq) <span class="badge bg-info">Vision</span></button></li>
                     <li class="dropdown-divider"></li>
+                    <li class="dropdown-header">GOOGLE GEMINI (Direct)</li>
+                    <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Flash', 'gemini-1.5-flash')">Gemini 1.5 Flash</button></li>
+                    <li><button class="dropdown-item" onclick="setModel('Gemini 1.5 Pro', 'gemini-1.5-pro')">Gemini 1.5 Pro</button></li>
+                    <li class="dropdown-divider"></li>
+                    <li class="dropdown-header">HUGGING FACE</li>
+                    <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'huggingface/mistralai/Mistral-7B-v0.1')">Mistral 7B</button></li>
+                    <li class="dropdown-divider"></li>
                     <li class="dropdown-header">OPENROUTER MODELS</li>
                     <li><button class="dropdown-item" onclick="setModel('Llama 3 8B', 'meta-llama/llama-3-8b-instruct:free')">Llama 3 (8B)</button></li>
                     <li><button class="dropdown-item" onclick="setModel('Mistral 7B', 'mistralai/mistral-7b-instruct:free')">Mistral 7B</button></li>
